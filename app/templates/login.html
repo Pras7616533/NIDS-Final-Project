@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | DeepNIDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Login CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body>
+<button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+<div class="login-card">
+
+    <!-- HEADER -->
+    <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="DeepNIDS Logo" width="100%">
+    <h2>Welcome Back</h2>
+    <p>Login to access DeepNIDS Dashboard</p>
+
+    <!-- LOGIN FORM -->
+    <form method="POST" action="/login">
+
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="Enter username" required>
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+    </form>
+
+    <!-- LINKS -->
+    <div class="login-links">
+        <p>
+            <a href="/forgot_password">Forgot Password?</a>
+        </p>
+        <p>
+            Don’t have an account?
+            <a href="/signup">Sign Up</a>
+        </p>
+    </div>
+
+</div>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>
