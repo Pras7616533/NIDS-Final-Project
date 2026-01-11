@@ -1,11 +1,5 @@
 ![](app/static/images/security.jpeg)
 
-Perfect 👍
-Here is an **UPDATED, PROFESSIONAL, FINAL README** for your **DeepNIDS project**, including **authentication, admin panel, theme system, models, logs, PDF export**, etc.
-This is **submission + viva ready**.
-
----
-
 # 🚀 DeepNIDS – Deep Learning Based Network Intrusion Detection System
 
 ## 📌 Project Overview
