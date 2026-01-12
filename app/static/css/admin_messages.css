@@ -1,0 +1,230 @@
+/* ===============================
+   ROOT VARIABLES
+/* ================================ */
+:root {
+    --bg-main: #f4f7fb;
+    --bg-card: #ffffff;
+    --bg-sidebar: #6b88b7;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e5e7eb;
+
+    --primary: #2563eb;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #f59e0b;
+
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   DARK MODE
+================================ */
+body.dark {
+    --bg-main: #020617;
+    --bg-card: #020617;
+    --bg-sidebar: #020617;
+    --text-main: #e5e7eb;
+    --text-muted: #94a3b8;
+    --border-color: #1e293b;
+
+    --primary: #3b82f6;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #facc15;
+
+    --shadow: 0 15px 35px rgba(0, 0, 0, 0.55);
+} 
+
+/* ===============================
+   GLOBAL
+================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-main);
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+
+
+/* ===============================
+   MAIN CONTENT
+================================ */
+.main-content {
+    flex: 1;
+    padding: 35px 45px;
+    overflow-y: auto;
+}
+
+/* ===============================
+   HEADER
+================================ */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.admin-header h1 {
+    font-size: 28px;
+}
+
+.admin-header span {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+
+.pulse {
+    color: var(--danger);
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* ===============================
+   MESSAGE GRID
+================================ */
+.message-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 25px;
+}
+
+/* ===============================
+   MESSAGE CARD
+================================ */
+.message-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.message-card:hover {
+    transform: translateY(-5px);
+}
+
+/* ===============================
+   BADGES
+================================ */
+.badge {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.badge.new {
+    background: var(--danger);
+}
+
+.badge.read {
+    background: var(--success);
+}
+
+/* ===============================
+   MESSAGE CONTENT
+================================ */
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.sender {
+    font-weight: 600;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.message-subject {
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.message-body {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+.message-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.95;
+}
+
+.action-btn.reply {
+    background: var(--primary);
+    color: #fff;
+}
+
+.action-btn.delete {
+    background: var(--danger);
+    color: #fff;
+}
+
+/* ===============================
+   EMPTY STATE
+================================ */
+.empty-messages {
+    text-align: center;
+    grid-column: 1 / -1;
+    padding: 60px;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 900px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+}
