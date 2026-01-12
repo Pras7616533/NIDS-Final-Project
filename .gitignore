@@ -217,7 +217,6 @@ __pycache__
 logs/
 *.log
 *.npy
-*.mp4
 data/processed/
 *.npy
 reports/
