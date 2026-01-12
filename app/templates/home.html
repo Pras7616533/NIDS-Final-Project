@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Home | DeepNIDS</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <div class="sidebar">
+            <img class="logo" id="logo" src="/static/images/logo.jpeg" width="200" alt="logo">
+            <h2>🔐 DeepNIDS</h2>
+            <a href="/home" class="active">🏠 Home</a>
+            <a href="/models">📊 Models</a>
+            <a href="/compare">📈 Compare Models</a>
+            <a href="/logs">📜 Logs</a>
+            <a href="/about">👥 About</a>
+            <a href="/contact">📩 Contact</a>
+            {% if session.user == "admin" %}
+            <a href="/admin/messages">🛠 Admin Messages</a>
+            {% endif %}
+
+            <div class="sidebar-bottom">
+                <a href="/logout">🚪 Logout</a>
+                <button onclick="toggleTheme()">🌓 Theme</button>
+            </div>
+        </div>
+
+        <!-- ========== MAIN CONTENT ========== -->
+        <main class="content">
+
+            <!-- HEADER -->
+            <header class="header">
+                <img class="security" id="baner" src="/static/images/security.jpeg" width="950" alt="Security">
+                <h1>Welcome, {{ user }}</h1>
+                <p>Deep Learning–Based Network Intrusion Detection System</p>
+            </header>
+
+            <!-- INFO CARDS -->
+            <section class="cards">
+                <div class="card">
+                    <h3>🛡️ Project Overview</h3>
+                    <p>
+                        DeepNIDS detects malicious network traffic using advanced
+                        deep learning models such as DNN, CNN, LSTM, and Autoencoders.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Performance</h3>
+                    <p>
+                        Models achieve high accuracy, precision, and recall,
+                        ensuring reliable intrusion detection with minimal false positives.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3>📤 Reports</h3>
+                    <p>
+                        Generate downloadable PDF reports and CSV logs
+                        for analysis and documentation.
+                    </p>
+                </div>
+            </section>
+
+            <!-- QUICK ACTIONS -->
+            <section class="actions">
+                <h2>Quick Actions</h2>
+
+                <div class="action-buttons">
+                    <a href="/models" class="btn">Run Prediction</a>
+                    <a href="/compare" class="btn">Compare Models</a>
+                    <a href="/logs" class="btn">View Logs</a>
+                </div>
+            </section>
+
+            <!-- SAMPLE CHART -->
+            <section class="chart-section">
+                <h2>Model Accuracy Overview</h2>
+                <canvas id="accuracyChart"></canvas>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="/static/js/theme.js"></script>
+</body>
+
+</html>

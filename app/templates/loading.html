@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading | DeepNIDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Loading CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/loading.css') }}">
+</head>
+
+<body>
+
+<div class="loading-container">
+
+    <!-- LOGO -->
+    <div class="loading-logo">
+        <!-- You can replace with your project logo -->
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="DeepNIDS Logo">
+    </div>
+
+    <!-- TITLE -->
+    <div class="loading-title">DeepNIDS</div>
+    <div class="loading-subtitle">
+        Deep Learning Based Network Intrusion Detection System
+    </div>
+
+    <!-- SPINNER -->
+    <div class="spinner"></div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="loading-actions">
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="loading-footer">
+        © 2026 DeepNIDS | Secure • Intelligent • Reliable
+    </div>
+
+</div>
+
+<!-- AUTO REDIRECT (OPTIONAL) -->
+<script>
+    // Uncomment if you want automatic redirect
+    // setTimeout(() => {
+    //     window.location.href = "/login";
+    // }, 3000);
+</script>
+
+</body>
+</html>

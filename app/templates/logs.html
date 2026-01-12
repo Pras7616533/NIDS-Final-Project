@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Logs & Analytics | DeepNIDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="static/css/main.css">
+    <link rel="stylesheet" href="static/css/logs.css">
+</head>
+
+<body>
+    <div class="dashboard">
+
+        <!-- ===== SIDEBAR ===== -->
+        <div class="sidebar">
+            <img class="logo" id="logo" src="/static/images/logo.jpeg" width="200" alt="Security">
+            <h2>🔐 DeepNIDS</h2>
+            <a href="/home">🏠 Home</a>
+            <a href="/models">📊 Models</a>
+            <a href="/compare">📈 Compare Models</a>
+            <a href="/logs" class="active">📜 Logs</a>
+            <a href="/about">👥 About</a>
+            <a href="/contact">📩 Contact</a>
+            {% if session.user == "admin" %}
+            <a href="/admin/messages">🛠 Admin Messages</a>
+            {% endif %}
+
+            <div class="sidebar-bottom">
+                <a href="/logout">🚪 Logout</a>
+                <button onclick="toggleTheme()">🌓 Theme</button>
+            </div>
+        </div>
+
+        <!-- ===== MAIN ===== -->
+        <div class="main">
+
+            <div class="header">
+                <h2>Intrusion Logs & Analytics</h2>
+                <div>
+                    <a href="/export_logs_csv" class="btn">CSV</a>
+                    <a href="/export_logs_pdf" class="btn">PDF</a>
+                </div>
+            </div>
+
+            <!-- ===== CHARTS ===== -->
+            <div class="charts">
+                <div class="chart-card">
+                    <h3>Attack vs Normal</h3>
+                    <canvas id="attackChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <h3>Model-wise Attacks</h3>
+                    <canvas id="modelChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ===== TABLE ===== -->
+            <h3 style="margin-top:30px;">Detection Logs</h3>
+
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if logs %}
+                        {% for log in logs %}
+                        <tr class="{{ 'attack' if log[1] == 'Attack' else 'normal' }}">
+                            <td>{{ log[0] }}</td>
+                            <td>{{ log[1] }}</td>
+                            <td>{{ log[2] }}</td>
+                            <td>{{ log[3] }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No logs available</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script src="static/js/theme.js"></script>
+    <script>
+        // Charts
+        let attackChart, modelChart;
+
+        function loadCharts() {
+            fetch("/api/logs/stats")
+                .then(res => res.json())
+                .then(data => {
+
+                    if (attackChart) attackChart.destroy();
+                    attackChart = new Chart(document.getElementById("attackChart"), {
+                        type: "doughnut",
+                        data: {
+                            labels: ["Attack", "Normal"],
+                            datasets: [{
+                                data: [data.attack, data.normal],
+                                backgroundColor: ["#dc2626", "#16a34a"]
+                            }]
+                        }
+                    });
+
+                    if (modelChart) modelChart.destroy();
+                    modelChart = new Chart(document.getElementById("modelChart"), {
+                        type: "bar",
+                        data: {
+                            labels: Object.keys(data.model_attacks),
+                            datasets: [{
+                                label: "Attacks",
+                                data: Object.values(data.model_attacks),
+                                backgroundColor: "#2563eb"
+                            }]
+                        },
+                        options: {
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                });
+        }
+
+        loadCharts();
+    </script>
+
+</body>
+
+</html>

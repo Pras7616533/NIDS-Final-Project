@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Messages | DeepNIDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_messages.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- ===============================
+         SIDEBAR
+    ================================ -->
+    <div class="sidebar">
+        <img src="/static/images/logo.jpeg" class="logo" id="logo" width="180" alt="Security">
+        <h2>🔐 DeepNIDS</h2>
+
+        <a href="/home">🏠 Home</a>
+        <a href="/models">📊 Models</a>
+        <a href="/compare">📈 Compare Models</a>
+        <a href="/logs">📜 Logs</a>
+        <a href="/about">👥 About</a>
+        <a href="/contact">📩 Contact</a>
+
+        {% if session.user == "admin" %}
+        <a class="active" href="/admin/messages">🛠 Admin Messages</a>
+        {% endif %}
+
+        <div class="sidebar-bottom">
+            <a href="/logout">🚪 Logout</a>
+            <button type="button" onclick="toggleTheme()">🌓 Theme</button>
+        </div>
+    </div>
+
+    <!-- ===============================
+         MAIN CONTENT
+    ================================ -->
+    <div class="main-content">
+
+        <!-- HEADER -->
+        <div class="admin-header">
+            <h1>Admin Messages</h1>
+            <span>
+                Total: <strong id="totalCount">0</strong> |
+                New: <strong id="unreadCount">0</strong>
+            </span>
+        </div>
+
+        <!-- MESSAGE GRID -->
+        <div class="message-grid">
+
+            {% if messages %}
+                {% for msg in messages %}
+                <div class="message-card">
+
+                    <!-- STATUS -->
+                    <span class="badge {{ msg[5] }}">{{ msg[5]|upper }}</span>
+
+                    <!-- META -->
+                    <div class="message-header">
+                        <div class="sender">{{ msg[1] }}</div>
+                        <div class="timestamp">{{ msg[6] }}</div>
+                    </div>
+
+                    <!-- SUBJECT -->
+                    <div class="message-subject">
+                        {{ msg[3] }}
+                    </div>
+
+                    <!-- BODY -->
+                    <div class="message-body">
+                        {{ msg[4] }}
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="message-actions">
+                        <button type="button"
+                                class="action-btn reply"
+                                onclick="markAsRead({{ msg[0] }})">
+                            Mark Read
+                        </button>
+
+                        <button type="button"
+                                class="action-btn delete"
+                                onclick="deleteMessage({{ msg[0] }})">
+                            Delete
+                        </button>
+                    </div>
+
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-messages">
+                    No messages available
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- ===============================
+     JAVASCRIPT
+================================ -->
+<script src="/static/js/theme.js"></script>
+
+<script>
+/* ===============================
+   REAL-TIME STATS
+================================ */
+function fetchMessageStats() {
+    fetch("/api/messages/stats")
+        .then(res => {
+            if (!res.ok) throw new Error("Stats API error");
+            return res.json();
+        })
+        .then(data => {
+            document.getElementById("totalCount").innerText = data.total;
+            document.getElementById("unreadCount").innerText = data.unread;
+
+            const unread = document.getElementById("unreadCount");
+            unread.classList.toggle("pulse", data.unread > 0);
+        })
+        .catch(err => console.error(err));
+}
+
+fetchMessageStats();
+// setInterval(fetchMessageStats, 5000);
+
+/* ===============================
+   ACTIONS
+================================ */
+function markAsRead(id) {
+    fetch(`/api/messages/read/${id}`, { method: "POST" })
+        .then(() => location.reload())
+        .catch(err => console.error(err));
+}
+
+function deleteMessage(id) {
+    if (!confirm("Delete this message permanently?")) return;
+
+    fetch(`/api/messages/delete/${id}`, { method: "POST" })
+        .then(() => location.reload())
+        .catch(err => console.error(err));
+}
+</script>
+
+</body>
+</html>
