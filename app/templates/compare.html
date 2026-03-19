@@ -1,112 +1,113 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% set active_page = "compare" %}
 
-<head>
-    <title>Model Comparison | DeepNIDS</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/static/css/main.css">
-</head>
+{% block title %}Model Comparison | DeepNIDS{% endblock %}
 
-<body>
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
-    <div class="dashboard">
+{% block content %}
+<main class="main-content">
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <img src="/static/images/logo.jpeg" class="logo" id="logo" width="200" alt="Security">
-            <h2>🔐 DeepNIDS</h2>
-            <a href="/home">🏠 Home</a>
-            <a href="/models">📊 Models</a>
-            <a href="/compare" class="active">📈 Compare Models</a>
-            <a href="/logs">📜 Logs</a>
-            <a href="/about">👥 About</a>
-            <a href="/contact">📩 Contact</a>
-            {% if session.user == "admin" %}
-            <a href="/admin/messages">🛠 Admin Messages</a>
-            {% endif %}
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+        <h1>Model Performance Comparison</h1>
+        <p>Comparison of Deep Learning models based on evaluation metrics</p>
+    </header>
 
-            <div class="sidebar-bottom">
-                <a href="/logout">🚪 Logout</a>
-                <button onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <main class="content">
-
-            <h1>Model Performance Comparison</h1>
-            <p style="color: gray; margin-bottom: 20px;">
-                Comparison of Deep Learning models based on evaluation metrics
-            </p>
-
-            <!-- METRICS TABLE -->
-            <div class="card">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Model</th>
-                            <th>Accuracy (%)</th>
-                            <th>Precision (%)</th>
-                            <th>Recall (%)</th>
-                            <th>F1-Score (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for model, m in metrics.items() %}
-                        <tr>
-                            <td><b>{{ model }}</b></td>
-                            <td>{{ m.accuracy }}</td>
-                            <td>{{ m.precision }}</td>
-                            <td>{{ m.recall }}</td>
-                            <td>{{ m.f1 }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- CHART -->
-            <div class="card" style="margin-top:30px;">
-                <h3 style="margin-bottom:15px;">📈 Accuracy Comparison</h3>
-                <canvas id="accuracyChart"></canvas>
-            </div>
-
-        </main>
+    <!-- METRICS TABLE -->
+    <div class="glass-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr>
+                    <th style="background: rgba(255, 255, 255, 0.03); padding: 18px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">Model Engine</th>
+                    <th style="background: rgba(255, 255, 255, 0.03); padding: 18px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">Accuracy (%)</th>
+                    <th style="background: rgba(255, 255, 255, 0.03); padding: 18px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">Precision (%)</th>
+                    <th style="background: rgba(255, 255, 255, 0.03); padding: 18px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">Recall (%)</th>
+                    <th style="background: rgba(255, 255, 255, 0.03); padding: 18px 24px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">F1-Score (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for model, m in metrics.items() %}
+                <tr style="transition: var(--transition);">
+                    <td style="padding: 16px 24px; font-size: 14px; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid var(--border);">{{ model }}</td>
+                    <td style="padding: 16px 24px; font-size: 15px; font-weight: 600; color: #10b981; border-bottom: 1px solid var(--border);">{{ m.accuracy }}</td>
+                    <td style="padding: 16px 24px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">{{ m.precision }}</td>
+                    <td style="padding: 16px 24px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">{{ m.recall }}</td>
+                    <td style="padding: 16px 24px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border);">{{ m.f1 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
+    <!-- CHART -->
+    <div class="glass-card">
+        <h3 style="margin-bottom: 25px; font-size: 20px; font-weight: 700; color: var(--accent);">📈 Accuracy Comparison</h3>
+        <div style="height: 400px; display: flex; align-items: center; justify-content: center;">
+            <canvas id="accuracyChart"></canvas>
+        </div>
+    </div>
 
-    <script src="/static/js/theme.js"></script>
-    <script src="/static/js/compare.js"></script>
-    <script>
-        const ctx = document.getElementById("accuracyChart");
+</main>
+{% endblock %}
 
-        new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: {{ metrics.keys() | list | safe }},
-                datasets: [{
-                    label: "Accuracy (%)",
-                    data: [
-                        {% for m in metrics.values() %}
-                        {{ m.accuracy }},
-                        {% endfor %}
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: 90,
-                        max: 100
+{% block scripts %}
+<script src="/static/js/compare.js"></script>
+<script>
+    const ctx = document.getElementById("accuracyChart");
+
+    const labelsData = JSON.parse('{{ metrics.keys() | list | tojson | safe }}');
+    const accuracyData = JSON.parse('{{ metrics.values() | map(attribute="accuracy") | list | tojson | safe }}');
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labelsData,
+            datasets: [{
+                label: "Accuracy (%)",
+                data: accuracyData,
+                backgroundColor: [
+                    'rgba(37, 99, 235, 0.7)',
+                    'rgba(16, 185, 129, 0.7)',
+                    'rgba(245, 158, 11, 0.7)',
+                    'rgba(139, 92, 246, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(37, 99, 235, 1)',
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(245, 158, 11, 1)',
+                    'rgba(139, 92, 246, 1)'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: 90,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
                     }
                 }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
             }
-        });
-    </script>
-
-</body>
-
-</html>
+        }
+    });
+</script>
+{% endblock %}

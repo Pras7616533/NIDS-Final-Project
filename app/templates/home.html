@@ -1,91 +1,95 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %} {% set active_page = "home" %} {% block title %}Home |
+DeepNIDS{% endblock %} {% block content %}
+<main class="main-content">
+  <!-- HEADER -->
+  <header class="page-header">
+    <img
+      class="security"
+      id="baner"
+      src="{{ url_for('static', filename='images/security.jpeg') }}"
+      width="100%"
+      alt="Security"
+      style="
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 30px;
+      "
+    />
+    <h1>Welcome, {{ user }}</h1>
+    <p>Advanced Deep Learning–Based Network Intrusion Detection & Prevention</p>
+  </header>
 
-<head>
-    <title>Home | DeepNIDS</title>
-    <link rel="stylesheet" href="/static/css/main.css">
-</head>
-
-<body>
-
-    <div class="dashboard">
-        <div class="sidebar">
-            <img class="logo" id="logo" src="/static/images/logo.jpeg" width="200" alt="logo">
-            <h2>🔐 DeepNIDS</h2>
-            <a href="/home" class="active">🏠 Home</a>
-            <a href="/models">📊 Models</a>
-            <a href="/compare">📈 Compare Models</a>
-            <a href="/logs">📜 Logs</a>
-            <a href="/about">👥 About</a>
-            <a href="/contact">📩 Contact</a>
-            {% if session.user == "admin" %}
-            <a href="/admin/messages">🛠 Admin Messages</a>
-            {% endif %}
-
-            <div class="sidebar-bottom">
-                <a href="/logout">🚪 Logout</a>
-                <button onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
-
-        <!-- ========== MAIN CONTENT ========== -->
-        <main class="content">
-
-            <!-- HEADER -->
-            <header class="header">
-                <img class="security" id="baner" src="/static/images/security.jpeg" width="950" alt="Security">
-                <h1>Welcome, {{ user }}</h1>
-                <p>Deep Learning–Based Network Intrusion Detection System</p>
-            </header>
-
-            <!-- INFO CARDS -->
-            <section class="cards">
-                <div class="card">
-                    <h3>🛡️ Project Overview</h3>
-                    <p>
-                        DeepNIDS detects malicious network traffic using advanced
-                        deep learning models such as DNN, CNN, LSTM, and Autoencoders.
-                    </p>
-                </div>
-
-                <div class="card">
-                    <h3>📈 Performance</h3>
-                    <p>
-                        Models achieve high accuracy, precision, and recall,
-                        ensuring reliable intrusion detection with minimal false positives.
-                    </p>
-                </div>
-
-                <div class="card">
-                    <h3>📤 Reports</h3>
-                    <p>
-                        Generate downloadable PDF reports and CSV logs
-                        for analysis and documentation.
-                    </p>
-                </div>
-            </section>
-
-            <!-- QUICK ACTIONS -->
-            <section class="actions">
-                <h2>Quick Actions</h2>
-
-                <div class="action-buttons">
-                    <a href="/models" class="btn">Run Prediction</a>
-                    <a href="/compare" class="btn">Compare Models</a>
-                    <a href="/logs" class="btn">View Logs</a>
-                </div>
-            </section>
-
-            <!-- SAMPLE CHART -->
-            <section class="chart-section">
-                <h2>Model Accuracy Overview</h2>
-                <canvas id="accuracyChart"></canvas>
-            </section>
-
-        </main>
+  <!-- INFO CARDS -->
+  <section class="stats-grid">
+    <div class="glass-card">
+      <h3 style="color: var(--accent); margin-bottom: 12px">
+        🛡️ Project Overview
+      </h3>
+      <p style="color: var(--text-secondary); line-height: 1.6">
+        DeepNIDS detects malicious network traffic using ensemble deep learning
+        models and provides real-time prevention.
+      </p>
     </div>
 
-    <script src="/static/js/theme.js"></script>
-</body>
+    <div class="glass-card">
+      <h3 style="color: var(--accent); margin-bottom: 12px">📈 Performance</h3>
+      <p style="color: var(--text-secondary); line-height: 1.6">
+        Achieving 99%+ accuracy across CNN, LSTM, and DNN architectures with
+        sub-millisecond inference.
+      </p>
+    </div>
 
-</html>
+    <div class="glass-card">
+      <h3 style="color: var(--accent); margin-bottom: 12px">📤 Analytics</h3>
+      <p style="color: var(--text-secondary); line-height: 1.6">
+        Detailed forensic logs and automated reporting systems for incident
+        response and audit compliance.
+      </p>
+    </div>
+  </section>
+
+  <!-- QUICK ACTIONS -->
+  <section class="actions" style="margin-top: 40px">
+    <h2 style="margin-bottom: 25px">Quick Actions</h2>
+    <div
+      class="action-buttons"
+      style="display: flex; gap: 20px; flex-wrap: wrap"
+    >
+      <a
+        href="{{ url_for('models') }}"
+        class="btn-primary"
+        style="text-decoration: none"
+        >Run Prediction</a
+      >
+      <a
+        href="{{ url_for('compare_models') }}"
+        class="btn-primary"
+        style="
+          text-decoration: none;
+          background: transparent;
+          border: 1px solid var(--accent);
+          color: var(--accent);
+        "
+        >Compare Models</a
+      >
+      <a
+        href="{{ url_for('logs') }}"
+        class="btn-primary"
+        style="
+          text-decoration: none;
+          background: transparent;
+          border: 1px solid var(--accent);
+          color: var(--accent);
+        "
+        >View History</a
+      >
+    </div>
+  </section>
+
+  <!-- ACCURACY OVERVIEW -->
+  <section class="glass-card" style="margin-top: 40px">
+    <h2 style="margin-bottom: 20px">Network Accuracy Overview</h2>
+    <canvas id="accuracyChart" style="max-height: 300px"></canvas>
+  </section>
+</main>
+{% endblock %}

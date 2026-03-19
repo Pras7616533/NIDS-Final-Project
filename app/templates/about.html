@@ -1,151 +1,114 @@
-<!DOCTYPE html>
-<html lang="en">
+```html
+{% extends "base.html" %}
+{% set active_page = "about" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>About Us | DeepNIDS</title>
-    <link rel="stylesheet" href="/static/css/main.css">
-    <link rel="stylesheet" href="/static/css/about.css">
-</head>
+{% block title %}About Us | DeepNIDS{% endblock %}
 
-<body>
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
 
-    <div class="dashboard">
+{% block content %}
+<div class="main-content">
+    <header class="page-header">
+        <h1>About DeepNIDS</h1>
+    </header>
+    <div class="about-section">
+        <h2>Project Overview</h2>
+        <p>
+            Traditional intrusion detection systems struggle with modern cyber
+            threats due to static rule-based approaches. DeepNIDS addresses
+            this limitation by leveraging advanced deep learning models to
+            automatically learn complex network behavior patterns.
+        </p>
+        <p>
+            The system supports multiple models such as DNN, CNN, LSTM, and
+            Autoencoders to perform real-time intrusion detection and
+            comparative analysis.
+        </p>
+    </div>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <img id="logo" class="logo" src="/static/images/logo.jpeg" width="200" alt="Security">
-            <h2>🔐 DeepNIDS</h2>
-            <a href="/home">🏠 Home</a>
-            <a href="/models">📊 Models</a>
-            <a href="/compare">📈 Compare</a>
-            <a href="/logs">📜 Logs</a>
-            <a href="/about" class="active">👥 About Us</a>
-            <a href="/contact">📩 Contact</a>
-            {% if session.user == "admin" %}
-            <a href="/admin/messages">🛠 Admin Messages</a>
-            {% endif %}
-
-            <div class="sidebar-bottom">
-                <a href="/logout">🚪 Logout</a>
-                <button onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
-
-        <!-- ===== MAIN CONTENT ===== -->
-        <div class="main about-container">
-
-            <!-- HEADER -->
-            <div class="about-header">
-                <h1>About DeepNIDS</h1>
-                <p>
-                    DeepNIDS is a Deep Learning–based Network Intrusion Detection System
-                    designed to identify malicious activities in network traffic with
-                    high accuracy and minimal false positives.
-                </p>
-            </div>
-
-            <!-- PROJECT OVERVIEW -->
-            <div class="about-section">
-                <h2>Project Overview</h2>
-                <p>
-                    Traditional intrusion detection systems struggle with modern cyber
-                    threats due to static rule-based approaches. DeepNIDS addresses
-                    this limitation by leveraging advanced deep learning models to
-                    automatically learn complex network behavior patterns.
-                </p>
-                <p>
-                    The system supports multiple models such as DNN, CNN, LSTM, and
-                    Autoencoders to perform real-time intrusion detection and
-                    comparative analysis.
-                </p>
-            </div>
-
-            <!-- TECHNOLOGIES -->
-            <div class="about-section">
-                <h2>Technologies Used</h2>
-                <div class="tech-grid">
-                    <div class="tech-card">Python</div>
-                    <div class="tech-card">Flask</div>
-                    <div class="tech-card">TensorFlow / Keras</div>
-                    <div class="tech-card">Scikit-learn</div>
-                    <div class="tech-card">SQLite</div>
-                    <div class="tech-card">HTML / CSS / JavaScript</div>
-                    <div class="tech-card">Chart.js</div>
-                    <div class="tech-card">ReportLab (PDF)</div>
-                </div>
-            </div>
-
-            <!-- TEAM -->
-            <div class="about-section">
-                <h2>Project Team</h2>
-                <div class="team-grid">
-
-                    <div class="team-card">
-                        <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
-                        <h4>Prashant Kamalakar Deshmukh</h4>
-                        <span>Project Lead & Developer</span>
-                        <br>
-                        <samp>Contact with us on
-                            <a href="https://github.com/Pras7616533">Github</a>
-                        </samp>
-                    </div>
-
-                    <div class="team-card">
-                        <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
-                        <h4>Pranjal Babulal Patole</h4>
-                        <span>Tester and Documentation Handler</span>
-                        <br>
-                        <samp>Contact with us on
-                            <a href="https://github.com/Pranjal-Patole">Github</a>
-                        </samp>
-                    </div>
-
-                    <div class="team-card">
-                        <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
-                        <h4>Sarthak Jagdish Thokal</h4>
-                        <span>Presenter and Planner</span>
-                        <br>
-                        <samp>Contact with us on
-                            <a href="https://github.com/SarthakThokal">Github</a>
-                        </samp>
-                    </div>
-
-                    <div class="team-card">
-                        <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
-                        <h4>Gayatri Ram Bhoir</h4>
-                        <span>Information Gatherer and Presenter</span>
-                        <br>
-                        <samp>Contact with us on
-                            <a href="https://github.com/GayatriBhoir99">Github</a>
-                        </samp>
-                    </div>
-                </div>
-            </div>
-
-            <!-- OBJECTIVES -->
-            <div class="about-section">
-                <h2>Project Objectives</h2>
-                <div class="card">
-                    <ul>
-                        <li>Detect network intrusions using deep learning techniques</li>
-                        <li>Compare performance of multiple models</li>
-                        <li>Provide real-time visualization and logs</li>
-                        <li>Generate downloadable security reports</li>
-                        <li>Build a user-friendly SOC-style dashboard</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- FOOTER -->
-            <div class="about-footer">
-                © 2026 DeepNIDS | Diploma Project – Network Intrusion Detection System
-            </div>
-
+    <!-- TECHNOLOGIES -->
+    <div class="about-section">
+        <h2>Technologies Used</h2>
+        <div class="tech-grid">
+            <div class="tech-card">Python</div>
+            <div class="tech-card">Flask</div>
+            <div class="tech-card">TensorFlow / Keras</div>
+            <div class="tech-card">Scikit-learn</div>
+            <div class="tech-card">SQLite</div>
+            <div class="tech-card">HTML / CSS / JavaScript</div>
+            <div class="tech-card">Chart.js</div>
+            <div class="tech-card">ReportLab (PDF)</div>
         </div>
     </div>
 
-    <script src="/static/js/theme.js"></script>
-</body>
+    <!-- TEAM -->
+    <div class="about-section">
+        <h2>Project Team</h2>
+        <div class="team-grid">
 
-</html>
+            <div class="team-card">
+                <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
+                <h4>Prashant Kamalakar Deshmukh</h4>
+                <span>Project Lead & Developer</span>
+                <br>
+                <samp>Contact with us on
+                    <a href="https://github.com/Pras7616533">Github</a>
+                </samp>
+            </div>
+
+            <div class="team-card">
+                <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
+                <h4>Pranjal Babulal Patole</h4>
+                <span>Tester and Documentation Handler</span>
+                <br>
+                <samp>Contact with us on
+                    <a href="https://github.com/Pranjal-Patole">Github</a>
+                </samp>
+            </div>
+
+            <div class="team-card">
+                <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
+                <h4>Sarthak Jagdish Thokal</h4>
+                <span>Presenter and Planner</span>
+                <br>
+                <samp>Contact with us on
+                    <a href="https://github.com/SarthakThokal">Github</a>
+                </samp>
+            </div>
+
+            <div class="team-card">
+                <img src="{{ url_for('static', filename='images/user.png') }}" alt="Member">
+                <h4>Gayatri Ram Bhoir</h4>
+                <span>Information Gatherer and Presenter</span>
+                <br>
+                <samp>Contact with us on
+                    <a href="https://github.com/GayatriBhoir99">Github</a>
+                </samp>
+            </div>
+        </div>
+    </div>
+
+    <!-- OBJECTIVES -->
+    <div class="about-section">
+        <h2>Project Objectives</h2>
+        <div class="card">
+            <ul>
+                <li>Detect network intrusions using deep learning techniques</li>
+                <li>Compare performance of multiple models</li>
+                <li>Provide real-time visualization and logs</li>
+                <li>Generate downloadable security reports</li>
+                <li>Build a user-friendly SOC-style dashboard</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="about-footer">
+        © 2026 DeepNIDS | Diploma Project – Network Intrusion Detection System
+    </div>
+
+</div>
+{% endblock %}
+```

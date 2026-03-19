@@ -1,44 +1,29 @@
 import sqlite3
+from flask import g
 
-conn = sqlite3.connect("database.db")
-cursor = conn.cursor()
+DATABASE = 'database.db'
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    model TEXT,
-    prediction TEXT,
-    confidence REAL,
-    timestamp TEXT
-)
-""")
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DATABASE)
+        g.db.row_factory = sqlite3.Row  # This allows accessing columns by name
+    return g.db
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    email TEXT,
-    password TEXT
-)
-""")
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sender TEXT,
-    email TEXT,
-    subject TEXT,
-    body TEXT,
-    status TEXT DEFAULT 'new',
-    timestamp TEXT
-)
-""")
+def query_db(query, args=(), one=False):
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
 
-cursor.execute("""
-    ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'new'
-""")
-
-conn.commit()
-conn.close()
-
-print("Tables created")
+def execute_db(query, args=(), commit=True):
+    db = get_db()
+    cur = db.execute(query, args)
+    if commit:
+        db.commit()
+    cur.close()
+    return cur

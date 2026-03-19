@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}DeepNIDS{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    {% block head %}{% endblock %}
+  </head>
+
+  <body>
+    <div class="dashboard">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <img
+          class="logo"
+          id="logo"
+          src="{{ url_for('static', filename='images/logo.jpeg') }}"
+          width="180"
+          alt="logo"
+          style="border-radius: 15px; margin-bottom: 20px"
+        />
+        <h2>🔐 <span>DeepNIDS</span></h2>
+
+        <a
+          href="{{ url_for('home') }}"
+          class="{% if active_page == 'home' %}active{% endif %}"
+          >🏠 <span>Home</span></a
+        >
+        <a
+          href="{{ url_for('models') }}"
+          class="{% if active_page == 'models' %}active{% endif %}"
+          >📊 <span>Models</span></a
+        >
+        <a
+          href="{{ url_for('compare_models') }}"
+          class="{% if active_page == 'compare' %}active{% endif %}"
+          >📈 <span>Compare</span></a
+        >
+        <a
+          href="{{ url_for('logs') }}"
+          class="{% if active_page == 'logs' %}active{% endif %}"
+          >📜 <span>Logs</span></a
+        >
+        <a
+          href="{{ url_for('about') }}"
+          class="{% if active_page == 'about' %}active{% endif %}"
+          >👥 <span>About</span></a
+        >
+        <a
+          href="{{ url_for('contact') }}"
+          class="{% if active_page == 'contact' %}active{% endif %}"
+          >📩 <span>Contact</span></a
+        >
+
+        {% if session.get('user') == 'admin' %}
+        <a
+          href="{{ url_for('admin_messages') }}"
+          class="{% if active_page == 'admin_messages' %}active{% endif %}"
+          >🛠 <span>Admin</span></a
+        >
+        {% endif %}
+
+        {% if session.get('user') == 'admin' %}
+        <a
+          href="{{ url_for('dashboard') }}"
+          class="{% if active_page == 'dashboard' %}active{% endif %}"
+          >🛠 <span>Dashboard</span></a
+        >
+        {% endif %}
+
+        <div class="sidebar-bottom">
+          <button type="button" onclick="toggleTheme()">
+            🌓 <span>Theme</span>
+          </button>
+          <a href="{{ url_for('logout') }}" class="logout-btn"
+            >🚪 <span>Logout</span></a
+          >
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT BLOCK -->
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- REQUIRED SCRIPTS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

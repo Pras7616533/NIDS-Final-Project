@@ -3,7 +3,7 @@
 /* ================================ */
 :root {
     --bg-main: #f4f7fb;
-    --bg-card: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.8);
     --bg-sidebar: #6b88b7;
     --text-main: #0f172a;
     --text-muted: #64748b;
@@ -22,7 +22,7 @@
 ================================ */
 body.dark {
     --bg-main: #020617;
-    --bg-card: #020617;
+    --bg-card: rgba(15, 23, 42, 0.8);
     --bg-sidebar: #020617;
     --text-main: #e5e7eb;
     --text-muted: #94a3b8;
@@ -54,6 +54,172 @@ body {
 
 
 
+/* =========================================
+   ADMIN MESSAGES STYLES
+   ========================================= */
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.admin-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.admin-header span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* MESSAGE GRID */
+.message-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 30px;
+}
+
+/* MESSAGE CARD */
+.message-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    transition: var(--transition);
+}
+
+.message-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-glow);
+}
+
+/* BADGES */
+.badge {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.badge.new { background: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+.badge.read { background: #10b981; }
+
+/* CONTENT */
+.message-header {
+    margin-bottom: 12px;
+    padding-right: 60px;
+}
+
+.sender {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.sender small {
+    display: block;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.message-body {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* ACTIONS */
+.message-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.action-btn.reply {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.action-btn.delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.action-btn.delete:hover {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+/* UTILS */
+.pulse {
+    animation: accentPulse 2s infinite;
+}
+
+@keyframes accentPulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.empty-messages {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 100px 0;
+    color: var(--text-secondary);
+    font-size: 18px;
+    font-weight: 500;
+}
+
 /* ===============================
    MAIN CONTENT
 ================================ */
@@ -64,166 +230,9 @@ body {
 }
 
 /* ===============================
-   HEADER
-================================ */
-.admin-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.admin-header h1 {
-    font-size: 28px;
-}
-
-.admin-header span {
-    font-size: 15px;
-    color: var(--text-muted);
-}
-
-.pulse {
-    color: var(--danger);
-    animation: pulse 1.2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
-}
-
-/* ===============================
-   MESSAGE GRID
-================================ */
-.message-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 25px;
-}
-
-/* ===============================
-   MESSAGE CARD
-================================ */
-.message-card {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 22px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    position: relative;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.message-card:hover {
-    transform: translateY(-5px);
-}
-
-/* ===============================
-   BADGES
-================================ */
-.badge {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #fff;
-    text-transform: uppercase;
-}
-
-.badge.new {
-    background: var(--danger);
-}
-
-.badge.read {
-    background: var(--success);
-}
-
-/* ===============================
-   MESSAGE CONTENT
-================================ */
-.message-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.sender {
-    font-weight: 600;
-}
-
-.timestamp {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.message-subject {
-    font-weight: 700;
-    margin: 10px 0;
-}
-
-.message-body {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin-bottom: 18px;
-}
-
-/* ===============================
-   ACTION BUTTONS
-================================ */
-.message-actions {
-    display: flex;
-    gap: 12px;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.action-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.95;
-}
-
-.action-btn.reply {
-    background: var(--primary);
-    color: #fff;
-}
-
-.action-btn.delete {
-    background: var(--danger);
-    color: #fff;
-}
-
-/* ===============================
-   EMPTY STATE
-================================ */
-.empty-messages {
-    text-align: center;
-    grid-column: 1 / -1;
-    padding: 60px;
-    color: var(--text-muted);
-    font-size: 18px;
-}
-
-/* ===============================
    RESPONSIVE
 ================================ */
 @media (max-width: 900px) {
-    .sidebar {
-        display: none;
-    }
-
     .main-content {
         padding: 20px;
     }

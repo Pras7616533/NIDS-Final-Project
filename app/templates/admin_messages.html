@@ -1,57 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% set active_page = "admin_messages" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Messages | DeepNIDS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block title %}Admin Messages | DeepNIDS{% endblock %}
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_messages.css') }}">
-</head>
+{% endblock %}
 
-<body>
-
-<div class="dashboard">
-
-    <!-- ===============================
-         SIDEBAR
-    ================================ -->
-    <div class="sidebar">
-        <img src="/static/images/logo.jpeg" class="logo" id="logo" width="180" alt="Security">
-        <h2>🔐 DeepNIDS</h2>
-
-        <a href="/home">🏠 Home</a>
-        <a href="/models">📊 Models</a>
-        <a href="/compare">📈 Compare Models</a>
-        <a href="/logs">📜 Logs</a>
-        <a href="/about">👥 About</a>
-        <a href="/contact">📩 Contact</a>
-
-        {% if session.user == "admin" %}
-        <a class="active" href="/admin/messages">🛠 Admin Messages</a>
-        {% endif %}
-
-        <div class="sidebar-bottom">
-            <a href="/logout">🚪 Logout</a>
-            <button type="button" onclick="toggleTheme()">🌓 Theme</button>
-        </div>
-    </div>
-
-    <!-- ===============================
-         MAIN CONTENT
-    ================================ -->
+{% block content %}
     <div class="main-content">
 
         <!-- HEADER -->
-        <div class="admin-header">
-            <h1>Admin Messages</h1>
+        <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>Admin Messages</h1>
+                <p>Manage and respond to user inquiries and feedback.</p>
+            </div>
             <span>
-                Total: <strong id="totalCount">0</strong> |
+                Total: <strong id="totalCount">0</strong> | 
                 New: <strong id="unreadCount">0</strong>
             </span>
-        </div>
+        </header>
 
         <!-- MESSAGE GRID -->
         <div class="message-grid">
@@ -61,35 +30,33 @@
                 <div class="message-card">
 
                     <!-- STATUS -->
-                    <span class="badge {{ msg[5] }}">{{ msg[5]|upper }}</span>
+                    <span class="badge {{ msg.status }}">{{ msg.status|upper }}</span>
 
                     <!-- META -->
                     <div class="message-header">
-                        <div class="sender">{{ msg[1] }}</div>
-                        <div class="timestamp">{{ msg[6] }}</div>
+                        <div class="sender">
+                            {{ msg.name }}
+                            <small>{{ msg.email }}</small>
+                        </div>
+                        <div class="timestamp">{{ msg.timestamp }}</div>
                     </div>
-
-                    <!-- SUBJECT -->
-                    <div class="message-subject">
-                        {{ msg[3] }}
-                    </div>
-
+ 
                     <!-- BODY -->
                     <div class="message-body">
-                        {{ msg[4] }}
+                        {{ msg.message }}
                     </div>
 
                     <!-- ACTIONS -->
                     <div class="message-actions">
-                        <button type="button"
-                                class="action-btn reply"
-                                onclick="markAsRead({{ msg[0] }})">
+                        <button type="button" 
+                                class="action-btn reply" 
+                                onclick="markAsRead({{ msg.id }})">
                             Mark Read
                         </button>
 
-                        <button type="button"
-                                class="action-btn delete"
-                                onclick="deleteMessage({{ msg[0] }})">
+                        <button type="button" 
+                                class="action-btn delete" 
+                                onclick="deleteMessage({{ msg.id }})">
                             Delete
                         </button>
                     </div>
@@ -98,19 +65,15 @@
                 {% endfor %}
             {% else %}
                 <div class="empty-messages">
-                    No messages available
+                    ☕ No messages to display at the moment.
                 </div>
             {% endif %}
 
         </div>
     </div>
-</div>
+{% endblock %}
 
-<!-- ===============================
-     JAVASCRIPT
-================================ -->
-<script src="/static/js/theme.js"></script>
-
+{% block scripts %}
 <script>
 /* ===============================
    REAL-TIME STATS
@@ -151,6 +114,4 @@ function deleteMessage(id) {
         .catch(err => console.error(err));
 }
 </script>
-
-</body>
-</html>
+{% endblock %}

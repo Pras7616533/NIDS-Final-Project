@@ -1,15 +1,11 @@
 import os
 import numpy as np
-import sqlite3
 import csv
-
 from datetime import datetime
 from flask import Flask, render_template, redirect, url_for, session, jsonify, request, send_file, Response
 from tensorflow.keras.models import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import session, redirect, url_for
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 from reportlab.lib.styles import getSampleStyleSheet
@@ -18,16 +14,22 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.widgets.markers import makeMarker
 from reportlab.lib import colors
+
+from detection_engine import DetectionEngine
+from database import get_db, close_db, query_db, execute_db
 
 
 app = Flask(__name__)
 app.secret_key = "deepnids_secret_key"
 ADMIN_USERS = ["admin"]
 
+@app.teardown_appcontext
+def teardown_db(exception):
+    close_db(exception)
+
 # ========================
-# LOAD MODELS
+# MODELS & ENGINE
 # ========================
 
 models_dict = {
@@ -37,45 +39,28 @@ models_dict = {
     "AUTOENCODER": load_model("models/deepnids_autoencoder.h5")
 }
 
+detection_engine = DetectionEngine(models_dict)
+
 model_metrics = {
-    "DNN": {
-        "accuracy": 98.2,
-        "precision": 97.6,
-        "recall": 98.9,
-        "f1": 98.2
-    },
-    "CNN": {
-        "accuracy": 99.1,
-        "precision": 98.8,
-        "recall": 99.3,
-        "f1": 99.0
-    },
-    "LSTM": {
-        "accuracy": 98.7,
-        "precision": 98.2,
-        "recall": 99.0,
-        "f1": 98.6
-    }
+    "DNN": {"accuracy": 98.2, "precision": 97.6, "recall": 98.9, "f1": 98.2},
+    "CNN": {"accuracy": 99.1, "precision": 98.8, "recall": 99.3, "f1": 99.0},
+    "LSTM": {"accuracy": 98.7, "precision": 98.2, "recall": 99.0, "f1": 98.6}
 }
 
+# ========================
+# HELPER FUNCTIONS
+# ========================
 
-X_test = np.load("data/processed/X.npy")
-y_test = np.load("data/processed/y.npy")
-
-@app.route("/evaluate", methods=["POST"])
-def evaluate():
-    data = request.json
-    model_name = data["model"]
-
+def get_model_evaluation(model_name):
     model = models_dict[model_name]
-
+    
     # Reshape test data if needed
     if model_name in ["CNN", "LSTM"]:
         X = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
     else:
         X = X_test
 
-    # Autoencoder evaluation
+    # Prediction
     if model_name == "AUTOENCODER":
         recon = model.predict(X)
         mse = np.mean(np.square(X - recon), axis=1)
@@ -83,20 +68,30 @@ def evaluate():
     else:
         y_pred = np.argmax(model.predict(X), axis=1)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
+    # Metrics
+    metrics = {
+        "accuracy": float(accuracy_score(y_test, y_pred)),
+        "precision": float(precision_score(y_test, y_pred)),
+        "recall": float(recall_score(y_test, y_pred)),
+        "f1_score": float(f1_score(y_test, y_pred)),
+        "confusion_matrix": confusion_matrix(y_test, y_pred).tolist()
+    }
+    return metrics
 
-    cm = confusion_matrix(y_test, y_pred)
 
-    return jsonify({
-        "accuracy": round(float(accuracy), 4),
-        "precision": round(float(precision), 4),
-        "recall": round(float(recall), 4),
-        "f1_score": round(float(f1), 4),
-        "confusion_matrix": cm.tolist()
-    })
+X_test = np.load("data/processed/X.npy")
+y_test = np.load("data/processed/y.npy")
+
+@app.route("/evaluate", methods=["POST"])
+def evaluate():
+    model_name = request.json["model"]
+    metrics = get_model_evaluation(model_name)
+    
+    # Round metrics for display
+    for key in ["accuracy", "precision", "recall", "f1_score"]:
+        metrics[key] = round(metrics[key], 4)
+        
+    return jsonify(metrics)
 
 # ========================
 # AUTHENTICATION ROUTES
@@ -109,19 +104,13 @@ def signup():
         email = request.form["email"]
         password = generate_password_hash(request.form["password"])
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
         try:
-            cursor.execute(
+            execute_db(
                 "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
                 (username, email, password)
             )
-            conn.commit()
-        except:
-            return "Username already exists"
-        finally:
-            conn.close()
+        except Exception as e:
+            return f"Error: {str(e)}"
 
         return redirect("/login")
 
@@ -133,13 +122,9 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username=?", (username,))
-        user = cursor.fetchone()
-        conn.close()
+        user = query_db("SELECT * FROM users WHERE username=?", (username,), one=True)
 
-        if user and check_password_hash(user[3], password):
+        if user and check_password_hash(user['password'], password):
             session["user"] = username
             return redirect("/home")
         else:
@@ -173,14 +158,11 @@ def forgot_password():
         username = request.form["username"]
         email = request.form["email"]
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-        cursor.execute(
+        user = query_db(
             "SELECT * FROM users WHERE username=? AND email=?",
-            (username, email)
+            (username, email),
+            one=True
         )
-        user = cursor.fetchone()
-        conn.close()
 
         if user:
             session["reset_user"] = username
@@ -199,14 +181,10 @@ def reset_password():
         new_password = generate_password_hash(request.form["password"])
         username = session["reset_user"]
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-        cursor.execute(
+        execute_db(
             "UPDATE users SET password=? WHERE username=?",
             (new_password, username)
         )
-        conn.commit()
-        conn.close()
 
         session.pop("reset_user")
         return redirect("/login")
@@ -222,41 +200,64 @@ demo_index = 0
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    global demo_index
+    model_name = request.json["model"]
+    
+    # Simple state management for demo
+    if 'demo_index' not in session:
+        session['demo_index'] = 0
+    
+    index = session['demo_index']
+    x = X_demo[index]
+    session['demo_index'] = (index + 1) % len(X_demo)
 
+    result = detection_engine.predict_and_prevent(model_name, x)
+    save_log(model_name, result["prediction"], result["confidence"], result["attacker_ip"], result["action_taken"])
+
+    return jsonify(result)
+
+# ========================
+# IPS MANAGEMENT ROUTES
+# ========================
+
+@app.route("/api/ips/status")
+def ips_status():
+    return jsonify(detection_engine.get_ips_status())
+
+@app.route("/api/ips/unblock", methods=["POST"])
+@login_required
+@admin_required
+def unblock_ip():
     data = request.json
-    model_name = data["model"]
+    ip = data.get("ip")
+    if not ip:
+        return jsonify({"success": False, "message": "IP is required"}), 400
+    
+    success, message = detection_engine.unblock_ip(ip)
+    return jsonify({"success": success, "message": message})
 
-    model = models_dict[model_name]
+@app.route("/api/ips/whitelist/add", methods=["POST"])
+@login_required
+@admin_required
+def add_whitelist():
+    data = request.json
+    ip = data.get("ip")
+    if not ip:
+        return jsonify({"success": False, "message": "IP is required"}), 400
+    
+    detection_engine.ips.add_to_whitelist(ip)
+    return jsonify({"success": True, "message": f"IP {ip} added to whitelist"})
 
-    x = X_demo[demo_index]
-    demo_index = (demo_index + 1) % len(X_demo)
-
-    # Reshape
-    if model_name in ["CNN", "LSTM"]:
-        x = x.reshape(1, x.shape[0], 1)
-    else:
-        x = x.reshape(1, x.shape[0])
-
-    # Autoencoder logic
-    if model_name == "AUTOENCODER":
-        recon = model.predict(x)
-        mse = np.mean(np.square(x - recon))
-        prediction = "Attack" if mse > 0.01 else "Normal"
-        confidence = round(1 - mse, 4)
-    else:
-        pred = model.predict(x)
-        class_id = int(np.argmax(pred))
-        prediction = "Normal" if class_id == 0 else "Attack"
-        confidence = round(float(np.max(pred)), 4)
-
-    save_log(model_name, prediction, confidence)
-
-    return jsonify({
-        "model": model_name,
-        "prediction": prediction,
-        "confidence": confidence
-    })
+@app.route("/api/ips/whitelist/remove", methods=["POST"])
+@login_required
+@admin_required
+def remove_whitelist():
+    data = request.json
+    ip = data.get("ip")
+    if not ip:
+        return jsonify({"success": False, "message": "IP is required"}), 400
+    
+    detection_engine.ips.remove_from_whitelist(ip)
+    return jsonify({"success": True, "message": f"IP {ip} removed from whitelist"})
 
 # ========================
 # REPORT DOWNLOAD ROUTE
@@ -294,26 +295,10 @@ def download_report():
     file_path = f"app/reports/{model_name}_evaluation_report.pdf"
     model = models_dict[model_name]
 
-    # Prepare test data
-    if model_name in ["CNN", "LSTM"]:
-        X = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
-    else:
-        X = X_test
-
-    # Predictions
-    if model_name == "AUTOENCODER":
-        recon = model.predict(X)
-        mse = np.mean(np.square(X - recon), axis=1)
-        y_pred = (mse > 0.01).astype(int)
-    else:
-        y_pred = np.argmax(model.predict(X), axis=1)
-
     # Metrics
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred)
-    rec = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    cm = confusion_matrix(y_test, y_pred)
+    metrics = get_model_evaluation(model_name)
+    acc, prec, rec, f1 = metrics["accuracy"], metrics["precision"], metrics["recall"], metrics["f1_score"]
+    cm = np.array(metrics["confusion_matrix"])
 
     # ================= PDF CREATION =================
     doc = SimpleDocTemplate(file_path, pagesize=A4)
@@ -394,89 +379,37 @@ def download_report():
 @app.route("/logs")
 @login_required
 def logs():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    data = query_db("""
         SELECT model, prediction, confidence, timestamp
         FROM logs
         ORDER BY id DESC
     """)
-    data = cursor.fetchall()
-    conn.close()
-
     return render_template("logs.html", logs=data)
 
 @app.route("/api/logs")
 def api_logs():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    rows = query_db("""
         SELECT id, model, prediction, confidence, timestamp
         FROM logs
         ORDER BY id DESC
         LIMIT 50
     """)
 
-    rows = cursor.fetchall()
-    conn.close()
-
-    logs = []
-    for r in rows:
-        logs.append({
-            "id": r[0],
-            "model": r[1],
-            "prediction": r[2],
-            "confidence": r[3],
-            "timestamp": r[4]
-        })
-
+    logs = [dict(r) for r in rows]
     return jsonify(logs)
 
 @app.route("/api/log/<int:log_id>")
 def log_details(log_id):
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT model, prediction, confidence, timestamp
-        FROM logs WHERE id=?
-    """, (log_id,))
-
-    row = cursor.fetchone()
-    conn.close()
-
-    return jsonify({
-        "model": row[0],
-        "prediction": row[1],
-        "confidence": row[2],
-        "timestamp": row[3]
-    })
+    row = query_db("SELECT model, prediction, confidence, timestamp FROM logs WHERE id=?", (log_id,), one=True)
+    return jsonify(dict(row)) if row else jsonify({"error": "Log not found"}), 404
 
 @app.route("/api/logs/stats")
 def logs_stats():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
     # Attack vs Normal count
-    cursor.execute("""
-        SELECT prediction, COUNT(*) 
-        FROM logs 
-        GROUP BY prediction
-    """)
-    prediction_counts = dict(cursor.fetchall())
-
+    prediction_counts = dict(query_db("SELECT prediction, COUNT(*) FROM logs GROUP BY prediction"))
+    
     # Model-wise attack count
-    cursor.execute("""
-        SELECT model, COUNT(*) 
-        FROM logs 
-        WHERE prediction = 'Attack'
-        GROUP BY model
-    """)
-    model_counts = dict(cursor.fetchall())
-
-    conn.close()
+    model_counts = dict(query_db("SELECT model, COUNT(*) FROM logs WHERE prediction = 'Attack' GROUP BY model"))
 
     return jsonify({
         "attack": prediction_counts.get("Attack", 0),
@@ -489,69 +422,50 @@ def logs_stats():
 # ============================
 
 @app.route("/api/messages/stats")
+@login_required
+@admin_required
 def message_stats():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM messages")
-    total = cursor.fetchone()[0]
-
-    conn.close()
-
-    return jsonify({
-        "total": total,
-        "unread": total
-    })
+    total = query_db("SELECT COUNT(*) FROM messages", one=True)[0]
+    unread = query_db("SELECT COUNT(*) FROM messages WHERE status='new'", one=True)[0]
+    return jsonify({"total": total, "unread": unread})
 
 @app.route("/api/messages/read/<int:id>", methods=["POST"])
+@login_required
+@admin_required
 def mark_message_read(id):
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-    cursor.execute("UPDATE messages SET status='read' WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+    execute_db("UPDATE messages SET status='read' WHERE id=?", (id,))
     return jsonify({"success": True})
 
-
 @app.route("/api/messages/delete/<int:id>", methods=["POST"])
+@login_required
+@admin_required
 def delete_message(id):
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM messages WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+    execute_db("DELETE FROM messages WHERE id=?", (id,))
     return jsonify({"success": True})
 
 @app.route("/export_logs_csv")
+@login_required
 def export_logs_csv():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT model, prediction, confidence, timestamp FROM logs")
-    rows = cursor.fetchall()
-    conn.close()
-
+    rows = query_db("SELECT model, prediction, confidence, timestamp FROM logs")
+    
     def generate():
         yield "Model,Prediction,Confidence,Timestamp\n"
         for row in rows:
-            yield f"{row[0]},{row[1]},{row[2]},{row[3]}\n"
+            yield f"{row['model']},{row['prediction']},{row['confidence']},{row['timestamp']}\n"
 
     return Response(
         generate(),
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=reports/attack_logs.csv"}
+        headers={"Content-Disposition": "attachment;filename=attack_logs.csv"}
     )
 
 @app.route("/export_logs_pdf")
+@login_required
 def export_logs_pdf():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT model, prediction, confidence, timestamp FROM logs")
-    logs = cursor.fetchall()
-    conn.close()
-
-    file_path = "app/reports/attack_logs.pdf"
+    logs = query_db("SELECT model, prediction, confidence, timestamp FROM logs")
+    
+    file_path = os.path.join(os.path.dirname(__file__), "reports", "attack_logs.pdf")
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     pdf = canvas.Canvas(file_path, pagesize=A4)
     width, height = A4
 
@@ -562,7 +476,7 @@ def export_logs_pdf():
 
     pdf.setFont("Helvetica", 10)
     for log in logs:
-        text = f"Model: {log[0]} | Result: {log[1]} | Confidence: {log[2]} | Time: {log[3]}"
+        text = f"Model: {log['model']} | Result: {log['prediction']} | Confidence: {log['confidence']} | Time: {log['timestamp']}"
         pdf.drawString(40, y, text)
         y -= 15
 
@@ -572,7 +486,6 @@ def export_logs_pdf():
             y = height - 40
 
     pdf.save()
-
     return send_file(file_path, as_attachment=True)
 
 # ========================
@@ -587,26 +500,10 @@ def contact():
         email = request.form["email"]
         message = request.form["message"]
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                email TEXT,
-                message TEXT,
-                timestamp TEXT
-            )
-        """)
-
-        cursor.execute("""
+        execute_db("""
             INSERT INTO messages (name, email, message, timestamp)
             VALUES (?, ?, ?, ?)
         """, (name, email, message, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
-        conn.commit()
-        conn.close()
 
         return render_template("contact.html", success=True)
 
@@ -620,18 +517,11 @@ def contact():
 @login_required
 @admin_required
 def admin_messages():
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT name, email, message, timestamp
+    data = query_db("""
+        SELECT id, name, email, message, timestamp, status
         FROM messages
         ORDER BY id DESC
     """)
-
-    data = cursor.fetchall()
-    conn.close()
-
     return render_template("admin_messages.html", messages=data)
 
 # =========================
@@ -650,8 +540,9 @@ def home():
     return render_template("home.html", user=session["user"])
 
 @app.route("/dashboard")
+@login_required
+@admin_required
 def dashboard():
-    # later: protect with login session
     return render_template("dashboard.html")
 
 @app.route("/models")
@@ -672,17 +563,11 @@ def logout():
     return redirect("/")
 
 # == DATABASE CONNECTION ==
-def save_log(model, prediction, confidence):
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO logs (model, prediction, confidence, timestamp)
-        VALUES (?, ?, ?, ?)
-    """, (model, prediction, confidence, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-
-    conn.commit()
-    conn.close()
+def save_log(model, prediction, confidence, attacker_ip="N/A", action_taken="None"):
+    execute_db("""
+        INSERT INTO logs (model, prediction, confidence, attacker_ip, action_taken, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (model, prediction, confidence, attacker_ip, action_taken, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
 
 

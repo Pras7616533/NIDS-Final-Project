@@ -1,45 +1,165 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
 
-<head>
-    <title>Dashboard | DeepNIDS</title>
-    <link rel="stylesheet" href="/static/css/main.css">
-</head>
+{% block title %}Dashboard | DeepNIDS{% endblock %}
 
-<body>
+{% block head %}
+<style>
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
 
-    <div class="dashboard">
+  .metrics-grid .card {
+    border-radius: 20px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-md);
+  }
 
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <img src="/static/images/logo.jpeg" class="logo" id="logo" width="200" alt="Security">
-            <h2>🔐 DeepNIDS</h2>
-            <a href="/home">🏠 Home</a>
-            <a href="/models">📊 Models</a>
-            <a href="/compare">📈 Compare Models</a>
-            <a href="/logs">📜 Logs</a>
-            <a href="/about">👥 About</a>
-            <a href="/contact">📩 Contact</a>
-            {% if session.user == "admin" %}
-            <a href="/admin/messages">🛠 Admin Messages</a>
-            {% endif %}
+  .metrics-grid .card h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: var(--text-secondary);
+  }
 
-            <div class="sidebar-bottom">
-                <a href="/logout">🚪 Logout</a>
-                <button onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
+  .metrics-grid .card p {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
 
-        <!-- MAIN CONTENT -->
-        <div class="content">
-            <img src="/static/images/security.jpeg" width="900" height="400" alt="Security">
-            <h1>Welcome to DeepNIDS Dashboard</h1>
-            <p>Select a module from the left navigation bar.</p>
-        </div>
+  .table-container {
+    overflow: auto;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 
+  #blocked-ips-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 420px;
+  }
+
+  #blocked-ips-table th,
+  #blocked-ips-table td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  #blocked-ips-table th {
+    color: var(--text-secondary);
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    max-width: 520px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    z-index: 2000;
+  }
+
+  .toast.hidden {
+    display: none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <header class="page-header">
+    <h1>NIDPS Dashboard</h1>
+    <p>Admin-only live visibility into attacks and IPS actions.</p>
+  </header>
+
+  <div class="metrics-grid">
+    <div class="card">
+      <h3>Total Attacks</h3>
+      <p id="total-attacks">0</p>
     </div>
+    <div class="card">
+      <h3>Blocked IPs</h3>
+      <p id="blocked-count">0</p>
+    </div>
+    <div class="card">
+      <h3>System Status</h3>
+      <p id="system-status" style="color: #10b981">Active & Protecting</p>
+    </div>
+  </div>
 
-    <script src="/static/js/theme.js"></script>
-</body>
+  <section class="glass-card">
+    <h2 style="margin-bottom: 14px">Recently Blocked IPs</h2>
+    <div class="table-container">
+      <table id="blocked-ips-table">
+        <thead>
+          <tr>
+            <th>IP Address</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="blocked-ips-body"></tbody>
+      </table>
+    </div>
+  </section>
 
-</html>
+  <div id="alert-toast" class="toast hidden">
+    <span id="alert-message"></span>
+  </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function fetchStats() {
+    try {
+      const logsResponse = await fetch("/api/logs/stats");
+      const logsData = await logsResponse.json();
+      document.getElementById("total-attacks").innerText = logsData.attack;
+
+      const ipsResponse = await fetch("/api/ips/status");
+      const ipsData = await ipsResponse.json();
+
+      const blockedIps = ipsData.blocked_ips || [];
+      document.getElementById("blocked-count").innerText = blockedIps.length;
+
+      const tbody = document.getElementById("blocked-ips-body");
+      tbody.innerHTML = "";
+      blockedIps.forEach((ip) => {
+        const row = `<tr>
+          <td>${ip}</td>
+          <td><span style="color: #ef4444; font-weight: bold;">Blocked</span></td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats:", error);
+    }
+  }
+
+  function showAttackAlert(ip, type) {
+    const toast = document.getElementById("alert-toast");
+    const msg = document.getElementById("alert-message");
+    msg.innerHTML = `<strong>Attack Detected!</strong> ${type} from ${ip} - IP Blocked.`;
+    toast.classList.remove("hidden");
+    setTimeout(() => toast.classList.add("hidden"), 5000);
+  }
+
+  fetchStats();
+  setInterval(fetchStats, 10000);
+</script>
+{% endblock %}

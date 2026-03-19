@@ -1,197 +1,225 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
+{% set active_page = "models" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Models | DeepNIDS</title>
+{% block title %}Models | DeepNIDS{% endblock %}
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/models.css') }}">
+{% block head %}
+<!-- Models CSS & Chart.js -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/models.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+{% block content %}
+<main class="main-content">
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+        <h1>Intrusion Detection Models</h1>
+        <p>Select a model to predict, evaluate, or download a detailed diagnostic report.</p>
+    </header>
 
-<body>
-    <div class="layout">
+    <!-- ================= MODELS GRID ================= -->
+    <div class="models-grid">
 
-        <!-- ================= SIDEBAR ================= -->
-        <div class="sidebar">
-            <img class="logo" id="logo" src="/static/images/logo.jpeg" width="200" alt="Security">
-            <h2>🔐 DeepNIDS</h2>
-            <a href="/home">🏠 Home</a>
-            <a href="/models" class="active">📊 Models</a>
-            <a href="/compare">📈 Compare Models</a>
-            <a href="/logs">📜 Logs</a>
-            <a href="/about">👥 About</a>
-            <a href="/contact">📩 Contact</a>
-            {% if session.user == "admin" %}
-            <a href="/admin/messages">🛠 Admin Messages</a>
-            {% endif %}
+        <!-- ================= MODEL CARD TEMPLATE ================= -->
+        {% set models = [
+        ("DNN", "Deep Neural Network"),
+        ("CNN", "Convolutional Neural Network"),
+        ("LSTM", "Long Short-Term Memory"),
+        ("AUTOENCODER", "Anomaly Detection Autoencoder")
+        ] %}
 
-            <div class="sidebar-bottom">
-                <a href="/logout">🚪 Logout</a>
-                <button onclick="toggleTheme()">🌓 Theme</button>
-            </div>
-        </div>
+        {% for model, desc in models %}
+        <div class="model-card" id="card-{{ model }}">
 
-        <!-- ================= MAIN CONTENT ================= -->
-        <main class="content models-page">
-
-            <!-- PAGE HEADER -->
-            <div class="models-header">
-                <h1>Intrusion Detection Models</h1>
-                <p>Select a model to predict, evaluate, or download report</p>
+            <div class="model-title">
+                <h2>{{ model }}</h2>
+                <span class="model-badge">DL</span>
             </div>
 
-            <!-- ================= MODELS GRID ================= -->
-            <div class="models-grid">
+            <p class="model-desc">{{ desc }}</p>
 
-                <!-- ================= MODEL CARD TEMPLATE ================= -->
-                {% set models = [
-                ("DNN", "Deep Neural Network"),
-                ("CNN", "Convolutional Neural Network"),
-                ("LSTM", "Long Short-Term Memory"),
-                ("AUTOENCODER", "Anomaly Detection Autoencoder")
-                ] %}
+            <div class="model-actions">
+                <button class="btn-predict" onclick="predict('{{ model }}', this)">
+                    Predict
+                </button>
 
-                {% for model, desc in models %}
-                <div class="model-card" id="card-{{ model }}">
+                <button class="btn-evaluate" onclick="evaluateModel('{{ model }}', this)">
+                    Evaluate
+                </button>
 
-                    <div class="model-title">
-                        <h2>{{ model }}</h2>
-                        <span class="model-badge">DL</span>
-                    </div>
+                <button class="btn-download" onclick="downloadReport('{{ model }}', this)">
+                    Download PDF
+                </button>
+            </div>
 
-                    <p class="model-desc">{{ desc }}</p>
-
-                    <div class="model-actions">
-                        <button class="btn-predict" onclick="predict('{{ model }}')">
-                            Predict
-                        </button>
-
-                        <button class="btn-evaluate" onclick="evaluateModel('{{ model }}')">
-                            Evaluate
-                        </button>
-
-                        <button class="btn-download" onclick="downloadReport('{{ model }}')">
-                            Download PDF
-                        </button>
-                    </div>
-
-                    <div class="result-box" id="result-{{ model }}">
-                        Waiting for action...
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="chart-{{ model }}"></canvas>
-                    </div>
-
+            <!-- LOADING BAR -->
+            <div class="loading-section" id="loading-section-{{ model }}" style="display: none; margin-bottom: 25px;">
+                <div class="loading-bar-container" id="loading-bar-{{ model }}" style="margin-bottom: 10px;">
+                    <div class="loading-bar"></div>
                 </div>
-                {% endfor %}
+                <div class="loading-text" id="loading-text-{{ model }}">Processing...</div>
             </div>
-        </main>
+
+            <div class="result-box" id="result-{{ model }}">
+                <span style="color: var(--text-secondary); text-align: center;">Waiting for action...</span>
+            </div>
+
+            <div class="chart-container" style="display: flex; align-items: center; justify-content: center;">
+                <canvas id="chart-{{ model }}"></canvas>
+            </div>
+
+        </div>
+        {% endfor %}
     </div>
+</main>
+{% endblock %}
 
-    <!-- ================= JAVASCRIPT ================= -->
-    <script src="/static/js/theme.js"></script>
-    <script>
-        /* ================= PREDICT ================= */
-        function predict(model) {
-            fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ model: model })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById(`result-${model}`).innerHTML =
-                        `<b>Prediction:</b> ${data.prediction}<br>
-             <b>Confidence:</b> ${data.confidence}`;
-                })
-                .catch(() => {
-                    document.getElementById(`result-${model}`).innerHTML =
-                        "Prediction failed";
-                });
+{% block scripts %}
+<script>
+    const loadingIntervals = {};
+
+    function setLoading(model, btn, isLoading, originalText, loadingText) {
+        if (!btn) return;
+        const sectionElem = document.getElementById(`loading-section-${model}`);
+        const barContainer = document.getElementById(`loading-bar-${model}`);
+        const barElem = barContainer ? barContainer.querySelector('.loading-bar') : null;
+        const textElem = document.getElementById(`loading-text-${model}`);
+        
+        if (isLoading) {
+            btn.classList.add("btn-loading");
+            btn.innerText = loadingText;
+            if (sectionElem) sectionElem.style.display = "block";
+            if (barElem) barElem.style.width = "0%";
+            if (textElem) textElem.innerText = `${loadingText} (0%)`;
+            
+            let progress = 0;
+            if (loadingIntervals[model]) clearInterval(loadingIntervals[model]);
+            
+            loadingIntervals[model] = setInterval(() => {
+                let increment = 5; // linear consistent progress length
+                progress += increment;
+                if (progress > 95) progress = 95;
+                
+                if (barElem) barElem.style.width = `${Math.floor(progress)}%`;
+                if (textElem) textElem.innerText = `${loadingText} (${Math.floor(progress)}%)`;
+            }, 150);
+
+        } else {
+            if (loadingIntervals[model]) clearInterval(loadingIntervals[model]);
+            
+            if (barElem) barElem.style.width = "100%";
+            if (textElem) textElem.innerText = `${loadingText} (100%)`;
+            
+            setTimeout(() => {
+                btn.classList.remove("btn-loading");
+                btn.innerText = originalText;
+                if (sectionElem) sectionElem.style.display = "none";
+            }, 400);
         }
+    }
 
-        /* ================= EVALUATE ================= */
-        function evaluateModel(model) {
-            fetch("/evaluate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ model: model })
+    /* ================= PREDICT ================= */
+    function predict(model, btn) {
+        setLoading(model, btn, true, "Predict", "Predicting...");
+        fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model: model })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setLoading(model, btn, false, "Predict");
+                document.getElementById(`result-${model}`).innerHTML =
+                    `<b>Prediction:</b> ${data.prediction}<br>
+            <b>Confidence:</b> ${data.confidence}`;
             })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById(`result-${model}`).innerHTML =
-                        `<b>Accuracy:</b> ${data.accuracy}<br>
-             <b>Precision:</b> ${data.precision}<br>
-             <b>Recall:</b> ${data.recall}<br>
-             <b>F1-Score:</b> ${data.f1_score}`;
-
-                    drawChart(model, data.confusion_matrix);
-                })
-                .catch(() => {
-                    document.getElementById(`result-${model}`).innerHTML =
-                        "Evaluation failed";
-                });
-        }
-
-        /* ================= CONFUSION MATRIX CHART ================= */
-        function drawChart(model, cm) {
-            const ctx = document.getElementById(`chart-${model}`).getContext("2d");
-
-            if (window[`chart_${model}`]) {
-                window[`chart_${model}`].destroy();
-            }
-
-            window[`chart_${model}`] = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: ["TN", "FP", "FN", "TP"],
-                    datasets: [{
-                        label: "Confusion Matrix",
-                        data: [cm[0][0], cm[0][1], cm[1][0], cm[1][1]],
-                        backgroundColor: [
-                            "#22c55e",
-                            "#ef4444",
-                            "#f97316",
-                            "#3b82f6"
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
+            .catch(() => {
+                setLoading(model, btn, false, "Predict");
+                document.getElementById(`result-${model}`).innerHTML =
+                    "<span style='color: #ef4444;'>Prediction failed</span>";
             });
+    }
+
+    /* ================= EVALUATE ================= */
+    function evaluateModel(model, btn) {
+        setLoading(model, btn, true, "Evaluate", "Evaluating...");
+        fetch("/evaluate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model: model })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setLoading(model, btn, false, "Evaluate");
+                document.getElementById(`result-${model}`).innerHTML =
+                    `<b>Accuracy:</b> ${data.accuracy}<br>
+            <b>Precision:</b> ${data.precision}<br>
+            <b>Recall:</b> ${data.recall}<br>
+            <b>F1-Score:</b> ${data.f1_score}`;
+
+                drawChart(model, data.confusion_matrix);
+            })
+            .catch(() => {
+                setLoading(model, btn, false, "Evaluate");
+                document.getElementById(`result-${model}`).innerHTML =
+                    "<span style='color: #ef4444;'>Evaluation failed</span>";
+            });
+    }
+
+    /* ================= CONFUSION MATRIX CHART ================= */
+    function drawChart(model, cm) {
+        const ctx = document.getElementById(`chart-${model}`).getContext("2d");
+
+        if (window[`chart_${model}`]) {
+            window[`chart_${model}`].destroy();
         }
 
-        /* ================= DOWNLOAD PDF ================= */
-        function downloadReport(model) {
-            fetch("/download_report", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ model: model })
+        window[`chart_${model}`] = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["TN", "FP", "FN", "TP"],
+                datasets: [{
+                    label: "Confusion Matrix",
+                    data: [cm[0][0], cm[0][1], cm[1][0], cm[1][1]],
+                    backgroundColor: [
+                        "#22c55e",
+                        "#ef4444",
+                        "#f97316",
+                        "#3b82f6"
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    /* ================= DOWNLOAD PDF ================= */
+    function downloadReport(model, btn) {
+        setLoading(model, btn, true, "Download PDF", "Generating PDF...");
+        fetch("/download_report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model: model })
+        })
+            .then(response => response.blob())
+            .then(blob => {
+                setLoading(model, btn, false, "Download PDF");
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = model + "_evaluation_report.pdf";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
             })
-                .then(response => response.blob())
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = model + "_evaluation_report.pdf";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    // window.URL.revokeObjectURL(url);
-                });
-        } 
-    </script>
-
-</body>
-
-</html>
+            .catch(() => {
+                setLoading(model, btn, false, "Download PDF");
+            });
+    } 
+</script>
+{% endblock %}
