@@ -55,7 +55,7 @@
 /* CHARTS GRID */
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 30px;
     margin-top: 40px;
 }
@@ -81,6 +81,50 @@
     margin-bottom: 20px;
     font-size: 18px;
     font-weight: 700;
+}
+
+/* HEADER ACTIONS */
+.page-header-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.page-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* TABLE LAYOUT */
+.logs-table-card {
+    margin-top: 40px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.logs-table-card h3 {
+    padding: 25px 25px 10px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.model-cell {
+    font-weight: 600;
+}
+
+.timestamp-cell {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
 }
 
 /* TABLE STYLING */
@@ -154,3 +198,24 @@ tr.normal td:first-child {
 
 .status-pill.attack { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 .status-pill.normal { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+@media (max-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .page-header-split {
+        align-items: flex-start;
+    }
+
+    .page-actions {
+        width: 100%;
+    }
+
+    .page-actions a {
+        flex: 1;
+        text-align: center;
+    }
+}

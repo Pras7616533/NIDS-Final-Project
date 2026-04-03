@@ -23,44 +23,44 @@
           alt="logo"
           style="border-radius: 15px; margin-bottom: 20px"
         />
-        <h2>🔐 <span>DeepNIDS</span></h2>
+        <h2><span class="brand-mark">🔐</span><span>DeepNIDS</span></h2>
 
         <a
           href="{{ url_for('home') }}"
           class="{% if active_page == 'home' %}active{% endif %}"
-          >🏠 <span>Home</span></a
+          ><span class="nav-icon">🏠</span><span>Home</span></a
         >
         <a
           href="{{ url_for('models') }}"
           class="{% if active_page == 'models' %}active{% endif %}"
-          >📊 <span>Models</span></a
+          ><span class="nav-icon">📊</span><span>Models</span></a
         >
         <a
           href="{{ url_for('compare_models') }}"
           class="{% if active_page == 'compare' %}active{% endif %}"
-          >📈 <span>Compare</span></a
+          ><span class="nav-icon">📈</span><span>Compare</span></a
         >
         <a
           href="{{ url_for('logs') }}"
           class="{% if active_page == 'logs' %}active{% endif %}"
-          >📜 <span>Logs</span></a
+          ><span class="nav-icon">📝</span><span>Logs</span></a
         >
         <a
           href="{{ url_for('about') }}"
           class="{% if active_page == 'about' %}active{% endif %}"
-          >👥 <span>About</span></a
+          ><span class="nav-icon">👥</span><span>About</span></a
         >
         <a
           href="{{ url_for('contact') }}"
           class="{% if active_page == 'contact' %}active{% endif %}"
-          >📩 <span>Contact</span></a
+          ><span class="nav-icon">📩</span><span>Contact</span></a
         >
 
         {% if session.get('user') == 'admin' %}
         <a
           href="{{ url_for('admin_messages') }}"
           class="{% if active_page == 'admin_messages' %}active{% endif %}"
-          >🛠 <span>Admin</span></a
+          ><span class="nav-icon">👮</span><span>Admin</span></a
         >
         {% endif %}
 
@@ -68,16 +68,16 @@
         <a
           href="{{ url_for('dashboard') }}"
           class="{% if active_page == 'dashboard' %}active{% endif %}"
-          >🛠 <span>Dashboard</span></a
+          ><span class="nav-icon">👨‍💻</span><span>Dashboard</span></a
         >
         {% endif %}
 
         <div class="sidebar-bottom">
           <button type="button" onclick="toggleTheme()">
-            🌓 <span>Theme</span>
+            <span class="nav-icon">🌓</span><span>Theme</span>
           </button>
           <a href="{{ url_for('logout') }}" class="logout-btn"
-            >🚪 <span>Logout</span></a
+            ><span class="nav-icon">🚪</span><span>Logout</span></a
           >
         </div>
       </div>

@@ -12,14 +12,14 @@
 {% block content %}
 <div class="main-content">
 
-    <header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
+    <header class="page-header page-header-split">
+        <div class="page-title">
             <h1>Intrusion Logs & Analytics</h1>
             <p>Review comprehensive network activity and model detections.</p>
         </div>
-        <div style="display: flex; gap: 15px;">
-            <a href="{{ url_for('export_logs_csv') }}" class="btn-primary" style="text-decoration: none;">📥 CSV</a>
-            <a href="{{ url_for('export_logs_pdf') }}" class="btn-primary" style="text-decoration: none; background: transparent; border: 1px solid var(--accent); color: var(--accent);">📄 PDF</a>
+        <div class="page-actions">
+            <a href="{{ url_for('export_logs_csv') }}" class="btn-primary">CSV</a>
+            <a href="{{ url_for('export_logs_pdf') }}" class="btn-ghost">PDF</a>
         </div>
     </header>
 
@@ -37,10 +37,10 @@
     </div>
 
     <!-- ===== TABLE ===== -->
-    <div class="chart-card" style="margin-top: 40px; padding: 0; overflow: hidden;">
-        <h3 style="padding: 25px 25px 10px;">Detection Logs</h3>
-        
-        <div style="overflow-x:auto;">
+    <div class="chart-card logs-table-card">
+        <h3>Detection Logs</h3>
+
+        <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
@@ -54,19 +54,19 @@
                     {% if logs %}
                     {% for log in logs %}
                     <tr class="{{ 'attack' if log[1] == 'Attack' else 'normal' }}">
-                        <td style="font-weight: 600;">{{ log[0] }}</td>
+                        <td class="model-cell">{{ log[0] }}</td>
                         <td>
                             <span class="status-pill {{ 'attack' if log[1] == 'Attack' else 'normal' }}">
                                 {{ log[1] }}
                             </span>
                         </td>
                         <td>{{ log[2] }}</td>
-                        <td style="color: var(--text-secondary); font-size: 13px;">{{ log[3] }}</td>
+                        <td class="timestamp-cell">{{ log[3] }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-secondary);">☕ No detection logs available yet.</td>
+                        <td colspan="4" class="empty-state">No detection logs available yet.</td>
                     </tr>
                     {% endif %}
                 </tbody>

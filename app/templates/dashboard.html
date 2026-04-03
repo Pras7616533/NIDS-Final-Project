@@ -15,8 +15,9 @@
   .metrics-grid .card {
     border-radius: 20px;
     padding: 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
     box-shadow: var(--shadow-md);
   }
 
@@ -31,13 +32,14 @@
     font-size: 28px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    color: #fff;
+    color: var(--text-primary);
   }
 
   .table-container {
     overflow: auto;
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    background: var(--bg-card);
   }
 
   #blocked-ips-table {
@@ -50,7 +52,7 @@
   #blocked-ips-table td {
     padding: 12px 14px;
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--border);
   }
 
   #blocked-ips-table th {
